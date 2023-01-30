@@ -1,0 +1,77 @@
+-- View Data
+SELECT *
+FROM `covid-analysis-376009.Deaths.Covid Data`
+ORDER BY 3,4
+;
+
+-- Data Selection 
+SELECT location, date, total_cases, new_cases, total_deaths, population,
+ICU_patients, hosp_patients, total_vaccinations, total_boosters, population_density
+FROM `covid-analysis-376009.Deaths.Covid Data`
+ORDER BY 1,2
+;
+
+-- Total Cases Vs Total Deaths (shows chances of death should Covid be contracted).
+-- World View
+SELECT location, date, total_cases, total_deaths, (total_deaths / total_cases) * 100 as Death_percentage
+FROM `covid-analysis-376009.Deaths.Covid Data`
+ORDER BY 1,2
+;
+
+--African View
+SELECT location, date, total_cases, total_deaths, (total_deaths / total_cases) * 100 as Death_percentage
+FROM `covid-analysis-376009.Deaths.Covid Data`
+WHERE continent LIKE '%Africa%'
+ORDER BY 1,2
+;
+
+-- SA View
+SELECT location, date, total_cases, total_deaths, (total_deaths / total_cases) * 100 as Death_percentage
+FROM `covid-analysis-376009.Deaths.Covid Data`
+WHERE location LIKE '%South Africa%'
+ORDER BY 1,2
+;
+
+-- Total Cases vs Population (Covid Contraction)
+SELECT location, date, population, total_cases, (total_cases / population) * 100 as Death_percentage
+FROM `covid-analysis-376009.Deaths.Covid Data`
+WHERE continent LIKE '%Africa%'
+ORDER BY 1,2
+;
+
+-- Infection Rates vs population
+SELECT location, population, MAX(total_cases) AS Highest_Infection_per_Population, MAX(total_cases / population) * 100 AS Percentage_Infection_Rate_per_population
+FROM `covid-analysis-376009.Deaths.Covid Data`
+WHERE continent LIKE '%Africa%' --for the world data, we omitted this line
+GROUP BY location, population
+ORDER BY percentage_Infection_Rate_per_population DESC
+;
+
+-- Death Count per Countries (Highest)
+SELECT location, MAX(CAST(total_cases AS int)) AS Total_Death_Count
+FROM `covid-analysis-376009.Deaths.Covid Data`
+WHERE continent LIKE '%Africa%' 
+GROUP BY location
+ORDER BY Total_Death_Count DESC
+;
+
+-- Totals
+SELECT SUM(new_cases) AS Total_cases, SUM(CAST(new_deaths AS int)) AS Total_Deaths, SUM(CAST(new_deaths AS int)) / SUM(new_cases) * 100 AS Death_Percentage
+FROM `covid-analysis-376009.Deaths.Covid Data`
+WHERE continent LIKE '%Africa%'
+ORDER BY 1,2
+;
+
+-- Vacs
+SELECT continent, location, date, population, new_vaccinations, SUM(CAST(new_vaccinations AS int)) OVER (PARTITION BY location ORDER BY location, date) AS Rolling_Vaccinations
+FROM `covid-analysis-376009.Deaths.Covid Data`
+WHERE continent IS NOT NULL 
+ORDER BY 2,3
+;
+
+-- Hospitalisation
+SELECT continent, location, date, hosp_patients, icu_patients, new_deaths, SUM(CAST(new_deaths AS int)) OVER (PARTITION BY location ORDER BY location, date) AS Rolling_Deaths
+FROM `covid-analysis-376009.Deaths.Covid Data`
+WHERE continent IS NOT NULL 
+ORDER BY 2,3
+;
